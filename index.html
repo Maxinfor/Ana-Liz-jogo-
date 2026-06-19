@@ -2,50 +2,105 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: #fce4ec; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: 'Arial', sans-serif; }
-        .salon-card { background: white; border: 4px solid #ec4899; border-radius: 30px; padding: 20px; width: 90%; max-width: 400px; text-align: center; }
-        .tool-btn { background: #fbcfe8; border: 2px solid #ec4899; padding: 15px; border-radius: 20px; cursor: pointer; transition: 0.3s; font-size: 24px; }
-        .tool-btn:hover { background: #ec4899; transform: scale(1.05); }
-        #client-display { font-size: 50px; margin: 20px 0; }
+        body { background: #fdf2f8; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: 'Comic Sans MS', cursive; }
+        .salon-box { background: white; border: 8px solid #f472b6; border-radius: 40px; padding: 20px; width: 95%; max-width: 400px; text-align: center; }
+        .tool { font-size: 40px; background: #fee2e2; padding: 15px; border-radius: 20px; cursor: pointer; border: 4px solid #fecaca; }
+        .tool:hover { transform: scale(1.05); background: #fecaca; }
+        #confetti { position: fixed; top: 0; left: 0; pointer-events: none; }
     </style>
 </head>
 <body>
 
-<div class="salon-card">
-    <h1 class="text-2xl font-black text-pink-600 mb-4">SALÃO MÁGICO ✨</h1>
-    <div id="client-display">👩</div>
-    <div id="action-text" class="text-pink-800 font-bold mb-4">Escolha um serviço para a cliente!</div>
+<div class="salon-box">
+    <h1 class="text-2xl font-black text-pink-500">SALÃO MÁGICO ✨</h1>
     
-    <div class="grid grid-cols-2 gap-4">
-        <button class="tool-btn" onclick="fazerServico('Pintar Cabelo', '🎨')">🎨 Pintar</button>
-        <button class="tool-btn" onclick="fazerServico('Fazer Unhas', '💅')">💅 Unhas</button>
-        <button class="tool-btn" onclick="fazerServico('Corte', '✂️')">✂️ Corte</button>
-        <button class="tool-btn" onclick="fazerServico('Maquiagem', '💄')">💄 Make</button>
+    <!-- Barra de Tempo -->
+    <div class="w-full bg-gray-200 h-4 rounded-full my-3 overflow-hidden">
+        <div id="timer" class="bg-green-500 h-full w-full transition-all duration-1000"></div>
     </div>
     
-    <button onclick="resetar()" class="mt-6 text-pink-500 underline font-bold">Limpar Cliente</button>
+    <div id="cliente" class="text-7xl mb-2 cursor-pointer" onclick="falarPedido()">👸</div>
+    <div id="pedido" class="text-xl font-bold text-pink-600 mb-4 h-12">...</div>
+    
+    <div class="grid grid-cols-2 gap-3">
+        <div class="tool" onclick="verificar('🎨')">🎨 Pintar</div>
+        <div class="tool" onclick="verificar('💅')">💅 Unhas</div>
+        <div class="tool" onclick="verificar('✂️')">✂️ Cortar</div>
+        <div class="tool" onclick="verificar('💄')">💄 Maquiar</div>
+    </div>
+    
+    <div class="mt-4 font-bold text-pink-700">Estrelas: <span id="pontos">0</span></div>
 </div>
 
 <script>
-    function fazerServico(servico, emoji) {
-        document.getElementById('client-display').innerText = emoji;
-        document.getElementById('action-text').innerText = "Fazendo: " + servico + "... ✨";
-        
-        // Simula o tempo do serviço
-        setTimeout(() => {
-            alert("Sucesso! A cliente adorou o serviço de " + servico + "! 💖");
-            document.getElementById('client-display').innerText = "👩";
-            document.getElementById('action-text').innerText = "Escolha um novo serviço!";
-        }, 1500);
+    const pedidos = [
+        { emoji: '🎨', nome: "Quero pintar!" },
+        { emoji: '💅', nome: "Quero unhas!" },
+        { emoji: '✂️', nome: "Quero cortar!" },
+        { emoji: '💄', nome: "Quero maquiagem!" }
+    ];
+    
+    let atual = {};
+    let pontos = 0;
+    let tempo = 100;
+    let jogoAtivo = true;
+
+    function falarPedido() {
+        const msg = new SpeechSynthesisUtterance(atual.nome);
+        msg.lang = 'pt-BR';
+        window.speechSynthesis.speak(msg);
     }
 
-    function resetar() {
-        document.getElementById('client-display').innerText = "👩";
-        document.getElementById('action-text').innerText = "Escolha um serviço para a cliente!";
+    function novoPedido() {
+        tempo = 100;
+        jogoAtivo = true;
+        atual = pedidos[Math.floor(Math.random() * pedidos.length)];
+        document.getElementById('pedido').innerText = atual.nome;
+        falarPedido();
     }
+
+    // Cronômetro de paciência da cliente
+    setInterval(() => {
+        if(jogoAtivo) {
+            tempo -= 2;
+            document.getElementById('timer').style.width = tempo + "%";
+            if(tempo <= 0) {
+                document.getElementById('cliente').innerText = "😭";
+                jogoAtivo = false;
+                setTimeout(novoPedido, 1000);
+            }
+        }
+    }, 200);
+
+    function verificar(emoji) {
+        if (!jogoAtivo) return;
+        
+        if (emoji === atual.emoji) {
+            pontos++;
+            document.getElementById('pontos').innerText = pontos;
+            document.getElementById('cliente').innerText = "💖";
+            
+            // Feedback sonoro
+            const audio = new AudioContext();
+            const osc = audio.createOscillator();
+            osc.connect(audio.destination);
+            osc.frequency.value = 1000;
+            osc.start(); osc.stop(0.1);
+
+            jogoAtivo = false;
+            setTimeout(() => {
+                document.getElementById('cliente').innerText = "👸";
+                novoPedido();
+            }, 1000);
+        } else {
+            document.getElementById('cliente').innerText = "🤔";
+            tempo -= 20; // Punição por erro
+        }
+    }
+
+    novoPedido();
 </script>
 </body>
 </html>
