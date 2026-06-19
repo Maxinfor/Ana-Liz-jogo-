@@ -5,23 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background: linear-gradient(135deg, #ff9a9e, #fad0c4); height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; font-family: 'Comic Sans MS', cursive; }
-        .salon-box { background: #ffffff; border: 8px solid #fff; border-radius: 40px; padding: 15px; width: 98%; height: 98%; max-width: 500px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        .grid-tools { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; height: 45%; }
-        .tool { font-size: 0.8rem; font-weight: bold; background: #ffebf0; padding: 10px; border-radius: 20px; cursor: pointer; border: 3px solid #ffb7c5; transition: 0.2s; color: #ff6b8d; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-        .tool:active { transform: scale(0.9); background: #ff6b8d; color: white; }
+        body { background: #ffdee9; height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center; overflow: hidden; font-family: 'Comic Sans MS', cursive; }
+        .salon-box { background: white; border-radius: 30px; padding: 10px; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .grid-tools { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: 100%; margin-top: 10px; }
+        .tool { width: 22%; font-size: 0.7rem; background: #fff0f5; padding: 8px 2px; border-radius: 15px; border: 2px solid #ffb6c1; cursor: pointer; text-align: center; }
+        #cliente { font-size: 60px; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="salon-box">
-    <header class="w-full text-center">
-        <h1 class="text-2xl font-black text-pink-500">SALÃO MÁGICO ✨</h1>
-        <div class="text-sm font-bold text-pink-400">Fase <span id="fase">1</span> | Estrelas: <span id="pontos">0</span></div>
-    </header>
+    <h1 class="text-xl font-black text-pink-500">SALÃO MÁGICO ✨</h1>
+    <div class="text-sm font-bold text-pink-400">Fase <span id="fase">1</span> | Estrelas: <span id="pontos">0</span></div>
     
-    <div id="cliente" class="text-[70px] cursor-pointer" onclick="falarPedido()">👸</div>
-    <div id="pedido" class="text-md font-bold text-pink-600 bg-pink-50 p-3 rounded-2xl w-full text-center border-2 border-dashed border-pink-200">...</div>
+    <div id="cliente" onclick="falarPedido()">👸</div>
+    <div id="pedido" class="text-sm font-bold text-pink-600 bg-pink-100 p-2 rounded-xl my-2">Clique na princesa!</div>
     
     <div class="grid-tools">
         <div class="tool" onclick="verificar('🎨')">🎨 Pintar</div>
@@ -59,22 +57,25 @@
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
     function tocarGritoAlegria() {
-        // Sequência de notas rápidas simulando um "Iahhhool"
-        [880, 1100, 1300, 1700].forEach((freq, i) => {
+        const notas = [880, 1100, 1300, 1700];
+        notas.forEach((freq, i) => {
             setTimeout(() => {
                 const osc = audioCtx.createOscillator();
                 osc.connect(audioCtx.destination);
                 osc.frequency.value = freq;
-                osc.start(); osc.stop(0.15);
-            }, i * 150);
+                osc.start(); osc.stop(0.1);
+            }, i * 100);
         });
     }
 
     function falarPedido() {
         const msg = new SpeechSynthesisUtterance(atual.nome);
-        msg.lang = 'pt-BR'; 
-        msg.pitch = 1.8; // Voz mais aguda (infantil)
-        msg.rate = 1.1;  // Um pouco mais rápido
+        msg.lang = 'pt-BR';
+        // Tenta encontrar uma voz feminina/infantil
+        const voices = window.speechSynthesis.getVoices();
+        msg.voice = voices.find(v => v.name.includes('Luciana') || v.name.includes('Google português')) || null;
+        msg.pitch = 2; // Voz bem aguda
+        msg.rate = 1.2;
         window.speechSynthesis.speak(msg);
     }
 
@@ -91,12 +92,12 @@
             document.getElementById('pontos').innerText = pontos;
             document.getElementById('cliente').innerText = atual.visual;
             
-            if (acertosFase >= 5) {
-                tocarGritoAlegria(); // Toca o Iahhhool
+            if (acertosFase >= 3) {
+                tocarGritoAlegria();
                 setTimeout(() => {
                     fase++; acertosFase = 0;
                     document.getElementById('fase').innerText = fase;
-                    alert("🌟 Uau! Iahhhool! Você é uma estrela, Fase " + fase + "!");
+                    alert("Iahhhool! Fase " + fase + "!");
                     novoAtendimento();
                 }, 800);
             } else {
